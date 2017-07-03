@@ -182,5 +182,6 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    r1 = ApiRos()
+    r1.login()
 
