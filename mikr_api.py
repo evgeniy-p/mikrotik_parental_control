@@ -22,21 +22,24 @@ class ApiRos:
                    "=response=00" + binascii.hexlify(md.digest()).decode('UTF-8')])
 
     def talk(self, words):
-        if self.writeSentence(words) == 0: return
+        if self.writeSentence(words) == 0:
+            return
         r = []
-        while 1:
-            i = self.readSentence();
-            if len(i) == 0: continue
+        while True:
+            i = self.readSentence()
+            if len(i) == 0:
+                continue
             reply = i[0]
             attrs = {}
             for w in i[1:]:
                 j = w.find('=', 1)
-                if (j == -1):
+                if j == -1:
                     attrs[w] = ''
                 else:
                     attrs[w[:j]] = w[j + 1:]
             r.append((reply, attrs))
-            if reply == '!done': return r
+            if reply == '!done':
+                return r
 
     def writeSentence(self, words):
         ret = 0
@@ -50,7 +53,8 @@ class ApiRos:
         r = []
         while 1:
             w = self.readWord()
-            if w == '': return r
+            if w == '':
+                return r
             r.append(w)
 
     def writeWord(self, w):
@@ -121,47 +125,53 @@ class ApiRos:
         return c
 
     def writeStr(self, str):
-        n = 0;
+        n = 0
         while n < len(str):
             r = self.sk.send(bytes(str[n:], 'UTF-8'))
-            if r == 0: raise RuntimeError("connection closed by remote end")
+            if r == 0:
+                raise RuntimeError("connection closed by remote end")
             n += r
 
     def readStr(self, length):
         ret = ''
         while len(ret) < length:
             s = self.sk.recv(length - len(ret))
-            if s == '': raise RuntimeError("connection closed by remote end")
+            if s == '':
+                raise RuntimeError("connection closed by remote end")
             ret += s.decode('UTF-8', 'replace')
         return ret
 
 
-def main():
+def main(ipaddr):
     s = None
-    for res in socket.getaddrinfo(sys.argv[1], "8728", socket.AF_UNSPEC, socket.SOCK_STREAM):
+    for res in socket.getaddrinfo(ipaddr, "8728", socket.AF_UNSPEC, socket.SOCK_STREAM):
         af, socktype, proto, canonname, sa = res
         try:
             s = socket.socket(af, socktype, proto)
-        except (socket.error, msg):
+        except socket.error as msg:
             s = None
             continue
         try:
             s.connect(sa)
-        except (socket.error, msg):
+        except socket.error as msg:
             s.close()
             s = None
+            print('could not open socket - {}'.format(msg))
             continue
         break
-    if s is None:
-        print('could not open socket')
+    if __name__ == '__main__' and s is None:
         sys.exit(1)
 
-    apiros = ApiRos(s);
-    apiros.login(sys.argv[2], sys.argv[3]);
+    return s
+
+def interactive():
+    s = main(sys.argv[1])
+    apiros = ApiRos(s)
+    apiros.login(sys.argv[2], sys.argv[3])
 
     inputsentence = []
 
-    while 1:
+    while True:
         r = select.select([s, sys.stdin], [], [], None)
         if s in r[0]:
             # something to read in socket, read sentence
@@ -182,6 +192,4 @@ def main():
 
 
 if __name__ == '__main__':
-    r1 = ApiRos()
-    r1.login()
-
+    interactive()
