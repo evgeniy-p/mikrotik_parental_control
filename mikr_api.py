@@ -57,6 +57,24 @@ class ApiRos:
                 return r
             r.append(w)
 
+    def readall(self):
+        r = []
+        while True:
+            i = self.readSentence()
+            if len(i) == 0:
+                continue
+            reply = i[0]
+            attrs = {}
+            for w in i[1:]:
+                j = w.find('=', 1)
+                if j == -1:
+                    attrs[w] = ''
+                else:
+                    attrs[w[:j]] = w[j + 1:]
+            r.append((reply, attrs))
+            if reply == '!done':
+                return r
+
     def writeWord(self, w):
         print(("<<< " + w))
         self.writeLen(len(w))
