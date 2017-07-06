@@ -1,25 +1,30 @@
-import mikr_api
+import io
+import logging
+from contextlib import redirect_stdout
+from re import match
 
 
+class Script:
+
+    def get_item_id (self, router, question):
+        logging.debug('Отправляю запрос {}'.format(question))
+        with io.StringIO() as buf, redirect_stdout(buf):
+            router.writeSentence(question)
+            router.readall()
+            answer = buf.getvalue()
+        logging.debug('Получен ответ {}'.format(answer))
+        if '>>> =message=failure: item with such name already exists' in answer.split('\n'):
+            logging.warning('Указанный item уже существует!!!')
+            return
+        for line in answer.split('\n'):
+            if match('^.*=ret=.*$', line):
+                ID_ITEM = match('^.*=ret=(.*)$', line).group(1)
+                return ID_ITEM
+            if match('^.*=.id=.*$', line):
+                ID_ITEM = match('^.*=.id=(.*)$', line).group(1)
+                return ID_ITEM
 
 
-def id_item(router, question):
-    logging.debug('Отправляю запрос {}'.format(question))
-    with io.StringIO() as buf, redirect_stdout(buf):
-        router.writeSentence(question)
-        router.readall()
-        answer = buf.getvalue()
-    logging.debug('Получен ответ {}'.format(answer))
-    if '>>> =message=failure: item with such name already exists' in answer.split('\n'):
-        logging.warning('Указанный item уже существует!!!')
-        return
-    for line in answer.split('\n'):
-        if match('^.*=ret=.*$', line):
-            ID_ITEM = match('^.*=ret=(.*)$', line).group(1)
-            return ID_ITEM
-        if match('^.*=.id=.*$', line):
-            ID_ITEM = match('^.*=.id=(.*)$', line).group(1)
-            return ID_ITEM
 
 
 

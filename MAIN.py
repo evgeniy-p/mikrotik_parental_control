@@ -42,7 +42,7 @@ router = start_connect()
 login(router)
 
 # обращаемся к классу, по которому можно получить список хостов, а также задать статику и т.п
-router_host = dhcp_hosts.main(router)
+router_host = DhcpHosts.main(router)
 #router_host.make_static(router, 'cent_2')
 
 #choosed_policy =

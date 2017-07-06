@@ -4,7 +4,7 @@ from contextlib import redirect_stdout
 from re import match
 
 
-class dhcp_hosts():
+class DhcpHosts:
     def __init__(self):
         self.hosts = dict()
 
@@ -41,7 +41,7 @@ class dhcp_hosts():
 
 def main(router):
 
-    host_dict = dhcp_hosts()
+    host_dict = DhcpHosts()
     host_dict.get_host(router)
 
     if len(host_dict.hosts) > 0:
