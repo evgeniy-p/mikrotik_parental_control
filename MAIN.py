@@ -1,6 +1,6 @@
 import mikr_api
 import dhcp_hosts
-#import scirpt
+import scirpt
 import conf
 import sys
 import logging
@@ -35,16 +35,22 @@ def login(mikrot):
     logging.debug('Логин прошел успешно')
 
 
-policy_can = ['ftp', 'reboot', 'read', 'write', 'policy', 'test', 'password', 'sniff', 'sensitive', 'romon']
 
 logging.debug('Start')
 router = start_connect()
 login(router)
 
 # обращаемся к классу, по которому можно получить список хостов, а также задать статику и т.п
-router_host = DhcpHosts.main(router)
+router_host = dhcp_hosts.main(router)
 #router_host.make_static(router, 'cent_2')
 
-#choosed_policy =
+
+policy_can = ['ftp', 'reboot', 'read', 'write', 'policy', 'test', 'password', 'sniff', 'sensitive', 'romon']
+script_id = scirpt.Scripts()
+#script_id.choose_policy(policy_can[3], policy_can[2])
+script_id.script(router, 'test_script32')
+id1 = script_id.id
+
+
 
 

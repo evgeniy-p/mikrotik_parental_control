@@ -1,43 +1,34 @@
 import io
 import logging
-from contextlib import redirect_stdout
-from re import match
 
+class Scripts:
 
-class Script:
+    def __init__(self):
+        self.choosed_policy = []
+        self.id = None
 
-    def get_item_id (self, router, question):
-        logging.debug('Отправляю запрос {}'.format(question))
-        with io.StringIO() as buf, redirect_stdout(buf):
-            router.writeSentence(question)
-            router.readall()
-            answer = buf.getvalue()
-        logging.debug('Получен ответ {}'.format(answer))
-        if '>>> =message=failure: item with such name already exists' in answer.split('\n'):
-            logging.warning('Указанный item уже существует!!!')
-            return
-        for line in answer.split('\n'):
-            if match('^.*=ret=.*$', line):
-                ID_ITEM = match('^.*=ret=(.*)$', line).group(1)
-                return ID_ITEM
-            if match('^.*=.id=.*$', line):
-                ID_ITEM = match('^.*=.id=(.*)$', line).group(1)
-                return ID_ITEM
+    def script(self, router, name):
+        if self.choosed_policy == []:
+            logging.debug('Не выбранна политика- установим по умолчанию!')
+            self.choosed_policy = 'ftp', 'reboot', 'read', 'write', 'policy', 'test', 'password', 'sniff', 'sensitive', 'romon'
+        a = ','
+        self.id = router.get_item_id(['/system/script/add', '=name={}'.format(name),
+                                      '=policy={}'.format(a.join(self.choosed_policy))])
+        if not self.id:
+            logging.warning('ID item не был возвращен!!!')
+            self.id = self.find_script_name(name)
+            logging.debug('Получен ID item {}....'.format(self.id))
+        else:
+            logging.debug('Получен ID item {}....'.format(self.id))
 
+    def choose_policy(self, *args):
+        policy_can = ['ftp', 'reboot', 'read', 'write', 'policy', 'test', 'password', 'sniff', 'sensitive', 'romon']
+        if args:
+            for policy in args:
+                if policy in policy_can:
+                    self.choosed_policy.append(policy)
 
-
-
-
-
-id_script1 = id_item(router, ['/system/script/add', '=name={}'.format(name_script), '=policy={}'.format(choosed_policy)])
-if not id_script1:
-    logging.warning('ID item не был возвращен!!!')
-    id_script1 = id_item(router, ['/system/script/print', '?name={}'.format(name_script)])
-    logging.debug('Получен ID item {}....'.format(id_script1))
-else:
-    logging.debug('Получен ID item {}....'.format(id_script1))
-
-
-re
+    def find_script_name(self, name):
+        return router.get_item_id(['/system/script/print', '?name={}'.format(name)])
 
 

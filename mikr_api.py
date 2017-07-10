@@ -2,7 +2,13 @@
 
 import sys, posix, time, binascii, socket, select
 import hashlib
+import io
 
+from contextlib import redirect_stdout
+from re import match
+import logging
+
+logging.basicConfig(filename='mikrotik.log', level=logging.DEBUG)
 
 class ApiRos:
     "Routeros api"
@@ -159,6 +165,23 @@ class ApiRos:
             ret += s.decode('UTF-8', 'replace')
         return ret
 
+    def get_item_id(self, question):
+        logging.debug('Отправляю запрос {}'.format(question))
+        with io.StringIO() as buf, redirect_stdout(buf):
+            self.writeSentence(question)
+            self.readall()
+            answer = buf.getvalue()
+        logging.debug('Получен ответ {}'.format(answer))
+        if '>>> =message=failure: item with such name already exists' in answer.split('\n'):
+            logging.warning('Указанный item уже существует!!!')
+            return
+        for line in answer.split('\n'):
+            if match('^.*=ret=.*$', line):
+                ID_ITEM = match('^.*=ret=(.*)$', line).group(1)
+                return ID_ITEM
+            if match('^.*=.id=.*$', line):
+                ID_ITEM = match('^.*=.id=(.*)$', line).group(1)
+                return ID_ITEM
 
 def main(ipaddr):
     s = None
