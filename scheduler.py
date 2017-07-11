@@ -1,6 +1,5 @@
 from ID import Id
 
 
-class Scripts(Id):
-
+class Scheduler(Id):
     pass

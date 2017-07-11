@@ -27,6 +27,7 @@ class ApiRos:
         self.talk(["/login", "=name=" + username,
                    "=response=00" + binascii.hexlify(md.digest()).decode('UTF-8')])
 
+
     def talk(self, words):
         if self.writeSentence(words) == 0:
             return
@@ -172,7 +173,8 @@ class ApiRos:
             self.readall()
             answer = buf.getvalue()
         logging.debug('Получен ответ {}'.format(answer))
-        if '>>> =message=failure: item with such name already exists' in answer.split('\n'):
+        if '>>> =message=failure: item with such name already exists' in answer.split('\n') or \
+                '>>> =message=failure: item with this name already exists' in answer.split('\n'):
             logging.warning('Указанный item уже существует!!!')
             return
         for line in answer.split('\n'):

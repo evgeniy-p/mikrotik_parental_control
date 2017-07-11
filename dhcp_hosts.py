@@ -5,13 +5,14 @@ from re import match
 
 
 class DhcpHosts:
-    def __init__(self):
+    def __init__(self, router):
         self.hosts = dict()
+        self.router = router
 
-    def talk(self, router, question):
+    def talk(self, question):
         logging.debug('Отправляю запрос {}....'.format(question))
         with io.StringIO() as buf, redirect_stdout(buf):
-            router.talk(["{}".format(question)])
+            self.router.talk(["{}".format(question)])
             answer = buf.getvalue()
         if ">>> =message=no such command" in answer.split('\n') \
                 or ">>> =message=no such command prefix" in answer.split('\n'):
@@ -21,8 +22,8 @@ class DhcpHosts:
             logging.debug('Получен ответ {}!'.format(answer))
             return answer
 
-    def get_host(self, router):
-        for line in self.talk(router, '/ip/dhcp-server/lease/print').split('\n'):
+    def get_host(self):
+        for line in self.talk('/ip/dhcp-server/lease/print').split('\n'):
             list_id = list()
             if match('^.*=.id=.*$', line):
                 item = match('^.*=.id=(.*)$', line).group(1)
@@ -31,21 +32,8 @@ class DhcpHosts:
                 self.hosts['{}'.format(match('^.*=host-name=(.*)$', line).group(1))] = list_id
         return self.hosts
 
-    def make_static(self, router, hostname):
+    def make_static(self, hostname):
         for ID in self.hosts[hostname]:
             logging.debug('Задаем статику для {}, ID - {}'.format(hostname,ID))
             with io.StringIO() as buf, redirect_stdout(buf):
-                router.writeSentence(['/ip/dhcp-server/lease/make-static', ID])
-        return True
-
-
-def main(router):
-
-    host_dict = DhcpHosts()
-    host_dict.get_host(router)
-
-    if len(host_dict.hosts) > 0:
-        logging.debug('Построен словарь хостов {}'.format(host_dict.hosts))
-    else:
-        logging.debug('Хостов нет')
-    return  host_dict
+                self.router.writeSentence(['/ip/dhcp-server/lease/make-static', ID])
