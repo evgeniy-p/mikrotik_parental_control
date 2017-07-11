@@ -6,7 +6,10 @@ import conf
 import sys
 import logging
 import io
+import widget
 from contextlib import redirect_stdout
+from PyQt5.QtWidgets import QApplication, QMainWindow
+
 
 logging.basicConfig(filename='mikrotik.log', level=logging.WARNING)
 
@@ -62,3 +65,10 @@ scheld_id = scheduler.Scheduler(router)
 #scheld_id.make('scheduler', 'test_scheld')
 #id2 = scheld_id.id
 
+app = QApplication(sys.argv)
+window = QMainWindow()
+ui = widget.Ui_MainWindow()
+ui.setupUi(window)
+
+window.show()
+sys.exit(app.exec_())
