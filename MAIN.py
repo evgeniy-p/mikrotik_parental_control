@@ -6,9 +6,8 @@ import conf
 import sys
 import logging
 import io
-import widget
+import windowMain
 from contextlib import redirect_stdout
-from PyQt5.QtWidgets import QApplication, QMainWindow
 
 
 logging.basicConfig(filename='mikrotik.log', level=logging.WARNING)
@@ -45,14 +44,13 @@ login(router)
 
 # обращаемся к классу, по которому можно получить список хостов, а также задать статику и т.п
 router_host = dhcp_hosts.DhcpHosts(router)
-"""
 hosts = router_host.get_host()
 if len(hosts) > 0:
     logging.debug('Построен словарь хостов {}'.format(hosts))
 else:
     logging.debug('Хостов нет')
-router_host.make_static(router, 'cent_2')
-"""
+#router_host.make_static(router, 'cent_2')
+
 # Обращаемся к классу, по которому можно создать скрипт и получить его id для дальнейшего управления
 script_id = scirpt.Scripts(router)
 #script_id.choose_policy(policy_can[3], policy_can[2])
@@ -65,10 +63,8 @@ scheld_id = scheduler.Scheduler(router)
 #scheld_id.make('scheduler', 'test_scheld')
 #id2 = scheld_id.id
 
-app = QApplication(sys.argv)
-window = QMainWindow()
-ui = widget.Ui_MainWindow()
-ui.setupUi(window)
+logging.debug('Запускаем главное окно, передаем список хостов')
+MainWindow = windowMain.MainWindow()
+MainWindow.set_params(hosts)
+MainWindow.run()
 
-window.show()
-sys.exit(app.exec_())
