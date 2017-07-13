@@ -22,14 +22,17 @@ class DhcpHosts:
             logging.debug('Получен ответ {}!'.format(answer))
             return answer
 
-    def get_host(self):
-        for line in self.talk('/ip/dhcp-server/lease/print').split('\n'):
-            list_id = list()
-            if match('^.*=.id=.*$', line):
-                item = match('^.*=.id=(.*)$', line).group(1)
-            if match('^.*=host-name=.*$', line):
-                list_id.append(item)
-                self.hosts['{}'.format(match('^.*=host-name=(.*)$', line).group(1))] = list_id
+    def get_hosts(self):
+        hosts_list = self.talk('/ip/dhcp-server/lease/print').split('>>> !re')
+        hosts_list.remove('<<< /ip/dhcp-server/lease/print\n<<< \n')
+        for host in range(0, len(hosts_list)):
+            self.hosts[host] = {}
+            for element in hosts_list[host].split('\n'):
+                if element == '>>> ' or element == '':
+                    continue
+                elif element == '>>> !done':
+                    break
+                self.hosts[host].update({element.split('=')[1]:element.split('=')[2]})
         return self.hosts
 
     def make_static(self, hostname):

@@ -9,7 +9,8 @@ import io
 import windowMain
 from contextlib import redirect_stdout
 
-
+with open('mikrotik.log', 'w') as file:
+    file.flush()
 logging.basicConfig(filename='mikrotik.log', level=logging.WARNING)
 
 
@@ -44,7 +45,8 @@ login(router)
 
 # обращаемся к классу, по которому можно получить список хостов, а также задать статику и т.п
 router_host = dhcp_hosts.DhcpHosts(router)
-hosts = router_host.get_host()
+
+hosts = router_host.get_hosts()
 if len(hosts) > 0:
     logging.debug('Построен словарь хостов {}'.format(hosts))
 else:

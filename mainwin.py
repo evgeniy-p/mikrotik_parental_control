@@ -41,7 +41,7 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
-        self.pushButton.setText(_translate("MainWindow", "PushButton"))
-        self.pushButton_3.setText(_translate("MainWindow", "PushButton"))
+        self.pushButton.setText(_translate("MainWindow", "Изменить"))
+        self.pushButton_3.setText(_translate("MainWindow", "Логи"))
         self.label.setText(_translate("MainWindow", "Выберите хост:"))
 

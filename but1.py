@@ -33,8 +33,8 @@ class Ui_Form(object):
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
         Form.setWindowTitle(_translate("Form", self.hostname))
-        self.pushButton.setText(_translate("Form", "PushButton"))
-        self.pushButton_2.setText(_translate("Form", "PushButton"))
-        self.pushButton_3.setText(_translate("Form", "PushButton"))
-        self.pushButton_4.setText(_translate("Form", "PushButton"))
+        self.pushButton.setText(_translate("Form", "make static"))
+        self.pushButton_2.setText(_translate("Form", "inet is on"))
+        self.pushButton_3.setText(_translate("Form", "remove static"))
+        self.pushButton_4.setText(_translate("Form", "Расписание"))
 
