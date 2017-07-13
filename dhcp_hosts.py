@@ -33,6 +33,12 @@ class DhcpHosts:
                 elif element == '>>> !done':
                     break
                 self.hosts[host].update({element.split('=')[1]:element.split('=')[2]})
+
+        for host in range(0, len(self.hosts)):
+            self.hosts[self.hosts[host]['host-name']] = self.hosts[host]
+            self.hosts.pop(host)
+        print(self.hosts)
+
         return self.hosts
 
     def make_static(self, hostname):

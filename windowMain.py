@@ -1,6 +1,7 @@
 import sys
 import mainwin
 import but1
+import dhcp_hosts
 import logs
 
 from PyQt5.QtWidgets import QApplication, QMainWindow
@@ -11,28 +12,24 @@ class MainWindow():
         self.ui = mainwin.Ui_MainWindow()
         self.window = QMainWindow()
 
-    def set_params(self, hosts):
+    def set_params(self, hosts, router):
+        self.hosts = hosts
+        self.router = router
         self.window.move(300, 300)
         self.ui.setupUi(self.window)
         for host in hosts:
-            self.ui.comboBox.addItem(hosts[host]['host-name'])
-        self.ui.pushButton.clicked.connect(self.button1)
-        self.ui.pushButton_3.clicked.connect(self.button3)
+            self.ui.comboBox.addItem(self.hosts[host]['host-name'])
+
 
     def run(self):
+        self.ui.pushButton.clicked.connect(self.button1)
+        self.ui.pushButton_3.clicked.connect(self.button3)
         self.window.show()
         sys.exit(self.app.exec_())
 
-    def fill_combo(self, hosts=None):
-        if not hosts:
-            self.ui.comboBox.addItem('None')
-        else:
-            for host in hosts:
-                self.ui.comboBox.addItem(host)
-
     def button1(self):
-        if not self.ui.comboBox.currentText():
-            return
+        #if dhcp_hosts.is_static_host(self.hosts[self.ui.comboBox.currentText()]):
+
         self.uibut1 = but1.Ui_Form()
         self.uibut1.hostname = self.ui.comboBox.currentText()
         self.windowbut1 = QMainWindow()
