@@ -37,12 +37,10 @@ class DhcpHosts:
         for host in range(0, len(self.hosts)):
             self.hosts[self.hosts[host]['host-name']] = self.hosts[host]
             self.hosts.pop(host)
-        print(self.hosts)
-
         return self.hosts
 
     def make_static(self, hostname):
         for ID in self.hosts[hostname]:
-            logging.debug('Задаем статику для {}, ID - {}'.format(hostname,ID))
+            logging.debug('Задаем статику для {}, ID - {}'.format(hostname, ID))
             with io.StringIO() as buf, redirect_stdout(buf):
                 self.router.writeSentence(['/ip/dhcp-server/lease/make-static', ID])

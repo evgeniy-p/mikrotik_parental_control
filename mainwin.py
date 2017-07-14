@@ -34,14 +34,18 @@ class Ui_MainWindow(object):
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
+        self.pushButton_4 = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButton_4.setGeometry(QtCore.QRect(20, 70, 99, 27))
+        self.pushButton_4.setObjectName("pushButton_4")
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "Mikrotik host control"))
         self.pushButton.setText(_translate("MainWindow", "Изменить"))
         self.pushButton_3.setText(_translate("MainWindow", "Логи"))
+        self.pushButton_4.setText(_translate("MainWindow", "Обновить"))
         self.label.setText(_translate("MainWindow", "Выберите хост:"))
 

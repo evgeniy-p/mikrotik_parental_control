@@ -9,10 +9,6 @@ import io
 import windowMain
 from contextlib import redirect_stdout
 
-with open('mikrotik.log', 'w') as file:
-    file.flush()
-logging.basicConfig(filename='mikrotik.log', level=logging.WARNING)
-
 
 def start_connect():
     s = mikr_api.main(conf.r1_ipaddr)
@@ -38,6 +34,9 @@ def login(mikrot):
 
 policy_can = ['ftp', 'reboot', 'read', 'write', 'policy', 'test', 'password', 'sniff', 'sensitive', 'romon']
 
+with open('mikrotik.log', 'w') as file:
+    file.flush()
+logging.basicConfig(filename='mikrotik.log', level=logging.WARNING)
 
 logging.debug('Start')
 router = start_connect()
@@ -46,27 +45,22 @@ login(router)
 # обращаемся к классу, по которому можно получить список хостов, а также задать статику и т.п
 router_host = dhcp_hosts.DhcpHosts(router)
 
-hosts = router_host.get_hosts()
-if len(hosts) > 0:
-    logging.debug('Построен словарь хостов {}'.format(hosts))
-else:
-    logging.debug('Хостов нет')
-#router_host.make_static(router, 'cent_2')
+# router_host.make_static(router, 'cent_2')
 
 # Обращаемся к классу, по которому можно создать скрипт и получить его id для дальнейшего управления
 script_id = scirpt.Scripts(router)
-#script_id.choose_policy(policy_can[3], policy_can[2])
-#script_id.make('script', 'test_script32')
-#id1 = script_id.id
+# script_id.choose_policy(policy_can[3], policy_can[2])
+# script_id.make('script', 'test_script32')
+# id1 = script_id.id
 
 # Обращаемся к классу, по которому можно создать правило расписания и получить его id для дальнейшего управления
 scheld_id = scheduler.Scheduler(router)
-#scheld_id.choose_policy(policy_can[3], policy_can[2])
-#scheld_id.make('scheduler', 'test_scheld')
-#id2 = scheld_id.id
+# scheld_id.choose_policy(policy_can[3], policy_can[2])
+# scheld_id.make('scheduler', 'test_scheld')
+# id2 = scheld_id.id
 
 logging.debug('Запускаем главное окно, передаем список хостов')
 MainWindow = windowMain.MainWindow()
-MainWindow.set_params(hosts)
+MainWindow.set_params(router_host)
 MainWindow.run()
 
