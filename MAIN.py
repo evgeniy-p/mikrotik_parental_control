@@ -20,13 +20,30 @@ policy_can = ['ftp', 'reboot', 'read', 'write', 'policy', 'test', 'password', 's
 class MainWindow():
     def __init__(self):
         self.app = QApplication(sys.argv)
-        self.ui = mainwin.Ui_MainWindow()
-        self.window = QMainWindow()
-        self.windowmessage = None
-        self.windowbut1 = None
-        self.windowbut3 = None
+        # Главное окно
+        self.Mui = mainwin.Ui_MainWindow()
+        self.Mwindow = QMainWindow()
+        self.Mwindow.move(300, 300)
+        self.Mui.setupUi(self.Mwindow)
+        # Окно кнопки 1
+        self.uibut1 = but1.Ui_Form()
+        self.windowbut1 = QMainWindow()
+        self.windowbut1.move(700, 300)
+        self.uibut1.setupUi(self.windowbut1)
+        # Окно сообщения об ошибке
+        self.uimessage = message.Ui_Form()
+        self.windowmessage = QMainWindow()
+        self.windowmessage.move(500, 500)
+        self.uimessage.setupUi(self.windowmessage)
+        # Окно кнопки 3
+        self.uibut3 = logs.Ui_Form()
+        self.windowbut3 = QMainWindow()
+        self.windowbut3.move(700, 600)
+        self.uibut3.setupUi(self.windowbut3)
+        # Соединение с mikrotik
         self.start_connect()
         self.login()
+        logging.debug('Запускаем главное окно, передаем список хостов')
         # обращаемся к классу, по которому можно получить список хостов, а также задать статику и т.п
         self.router_hosts = dhcp_hosts.DhcpHosts(self.router)
         self.hosts_dict = self.router_hosts.get_hosts()
@@ -48,57 +65,64 @@ class MainWindow():
     def start_connect(self):
         self.s = mikr_api.main(conf.r1_ipaddr)
         if not self.s:
+            self.uimessage.label.setText('Нет соединения!!!!')
+            self.uimessage.pushButton.clicked.connect(self.windowmessage.close)
+            self.windowmessage.show()
+            sys.exit(self.app.exec_())
             logging.critical('Соединение с mikrotik не установилась!')
             sys.exit()
         self.router = mikr_api.ApiRos(self.s)
         logging.debug('Соединение по сети прошло успешно')
 
-
     def login(self):
         logging.debug('Попытка логина (авторизация)....')
         with io.StringIO() as buf, redirect_stdout(buf):
-            self.router.login(conf.r1_login, conf.r1_passwd1)
+            try:
+                self.router.login(conf.r1_login, conf.r1_passwd1)
+            except AttributeError:
+                self.uimessage.label.setText('    Не авторизован!')
+                self.uimessage.pushButton.clicked.connect(self.windowmessage.close)
+                self.windowmessage.show()
+                sys.exit(self.app.exec_())
+                sys.exit()
             output = buf.getvalue()
             if ">>> =message=cannot log in" in output.split('\n'):
                 logging.critical('Логин или пароль не верен!')
+                self.uimessage.label.setText('    Не авторизован!')
+                self.uimessage.pushButton.clicked.connect(self.windowmessage.close)
+                self.windowmessage.show()
+                sys.exit(self.app.exec_())
                 sys.exit()
             logging.debug('Логин прошел успешно')
 
-
-
     def set_combo_box(self):
-        self.ui.comboBox.addItem('None')
+        self.Mui.comboBox.addItem('None')
         for host in self.hosts_dict:
-            self.ui.comboBox.addItem(self.hosts_dict[host]['host-name'])
+            self.Mui.comboBox.addItem(self.hosts_dict[host]['host-name'])
 
     def run(self):
-        self.window.move(300, 300)
-        self.ui.setupUi(self.window)
         self.set_combo_box()
-        self.ui.pushButton.clicked.connect(self.button1)
-        self.ui.pushButton_3.clicked.connect(self.button3)
-        self.ui.pushButton_4.clicked.connect(self.refresh)
-        self.window.show()
+        self.Mui.pushButton.clicked.connect(self.button1)
+        self.Mui.pushButton_3.clicked.connect(self.button3)
+        self.Mui.pushButton_4.clicked.connect(self.refresh)
+        self.Mwindow.show()
         sys.exit(self.app.exec_())
 
     def button1(self):
-        if self.ui.comboBox.currentText() == 'None':
-            self.uimessage= message.Ui_Form()
-            self.windowmessage = QMainWindow()
-            self.windowmessage.move(500, 500)
-            self.uimessage.setupUi(self.windowmessage)
+        if self.Mui.comboBox.currentText() == 'None':
+            if self.windowbut1:
+                self.windowbut1.hide()
+            self.uibut3.textBrowser.appendPlainText('host- none- warning')
             self.uimessage.label.setText('   ВЫБЕРИТЕ ХОСТ!!!')
             self.uimessage.pushButton.clicked.connect(self.windowmessage.hide)
             self.windowmessage.show()
             return
         if self.windowmessage:
             self.windowmessage.hide()
-        self.uibut1 = but1.Ui_Form()
-        self.uibut1.hostname = self.ui.comboBox.currentText()
-        self.windowbut1 = QMainWindow()
-        self.windowbut1.move(700, 300)
-        self.uibut1.setupUi(self.windowbut1)
-        if self.hosts_dict[self.ui.comboBox.currentText()]['dynamic'] == 'false':
+        self.uibut3.textBrowser.appendPlainText('button1 pressed')
+        self.uibut1.hostname = self.Mui.comboBox.currentText()
+        self.uibut3.textBrowser.appendPlainText('hostname {}'.format(self.Mui.comboBox.currentText()))
+        if self.hosts_dict[self.Mui.comboBox.currentText()]['dynamic'] == 'false':
             self.uibut1.pushButton.setText('already static')
             self.uibut1.pushButton.setDisabled(True)
         else:
@@ -107,44 +131,38 @@ class MainWindow():
         self.windowbut1.show()
 
     def button3(self):
+        self.uibut3.textBrowser.appendPlainText('button3 pressed')
         if self.windowmessage:
             self.windowmessage.hide()
         if self.windowbut1:
             self.windowbut1.hide()
-        self.uibut3 = logs.Ui_Form()
-        self.windowbut3 = QMainWindow()
-        self.windowbut3.move(700, 600)
-        self.uibut3.setupUi(self.windowbut3)
         self.windowbut3.show()
-        with open('/home/coreusr/PycharmProjects/study/mikrotik.log', 'r') as file:
-            for line in file:
-                self.uibut3.textBrowser.appendPlainText(line)
 
     def pushbuttonbut1_2(self):
+        self.uibut3.textBrowser.appendPlainText('pushbuttonbut1_2 pressed')
         self.uibut1.pushButton_2.setText("inet is off")
         self.windowbut1.hide()
-        self.ui.comboBox.clear()
+        self.Mui.comboBox.clear()
         self.set_combo_box()
 
     def refresh(self):
-        self.ui.comboBox.clear()
+        self.uibut3.textBrowser.appendPlainText('refresh button pressed')
+        logging.debug('Restart')
+        self.Mui.comboBox.clear()
         self.set_combo_box()
         if self.windowmessage:
             self.windowmessage.hide()
         if self.windowbut1:
             self.windowbut1.hide()
-        if self.windowbut3:
-            self.windowbut3.hide()
-
-
+        self.start_connect()
+        self.login()
+        self.router_hosts = dhcp_hosts.DhcpHosts(self.router)
+        self.hosts_dict = self.router_hosts.get_hosts()
 
 if __name__ == '__main__':
-    with open('mikrotik.log', 'w') as file:
-        file.flush()
+    with open('mikrotik.log', 'w') as mfile:
+        pass
     logging.basicConfig(filename='mikrotik.log', level=logging.WARNING)
     logging.debug('Start')
-    logging.debug('Запускаем главное окно, передаем список хостов')
-
-
     widget = MainWindow()
     widget.run()
