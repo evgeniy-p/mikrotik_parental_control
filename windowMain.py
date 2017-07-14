@@ -3,7 +3,19 @@ import mainwin
 import but1
 import logs
 import message
+import mikr_api
+import conf
+import sys
+import io
+import dhcp_hosts
+import scirpt
+import scheduler
+import logging
+from contextlib import redirect_stdout
 from PyQt5.QtWidgets import QApplication, QMainWindow
+
+policy_can = ['ftp', 'reboot', 'read', 'write', 'policy', 'test', 'password', 'sniff', 'sensitive', 'romon']
+
 
 class MainWindow():
     def __init__(self):
@@ -13,20 +25,56 @@ class MainWindow():
         self.windowmessage = None
         self.windowbut1 = None
         self.windowbut3 = None
+        self.start_connect()
+        self.login()
+        # обращаемся к классу, по которому можно получить список хостов, а также задать статику и т.п
+        self.router_hosts = dhcp_hosts.DhcpHosts(self.router)
+        self.hosts_dict = self.router_hosts.get_hosts()
+        #hosts = router_host.get_hosts()
+        #router_host.make_static(.['cent_2'])
 
-    def set_params(self, router_host):
-        self.r_hosts = router_host
-        self.hosts = self.r_hosts.get_hosts()
-        self.window.move(300, 300)
-        self.ui.setupUi(self.window)
-        self.set_combo_box()
+        # Обращаемся к классу, по которому можно создать скрипт и получить его id для дальнейшего управления
+        #script_id = scirpt.Scripts(router)
+        # script_id.choose_policy(policy_can[3], policy_can[2])
+        # script_id.make('script', 'test_script32')
+        # id1 = script_id.id
+
+        # Обращаемся к классу, по которому можно создать правило расписания и получить его id для дальнейшего управления
+        #scheld_id = scheduler.Scheduler(router)
+        # scheld_id.choose_policy(policy_can[3], policy_can[2])
+        # scheld_id.make('scheduler', 'test_scheld')
+        # id2 = scheld_id.id
+
+    def start_connect(self):
+        self.s = mikr_api.main(conf.r1_ipaddr)
+        if not self.s:
+            logging.critical('Соединение с mikrotik не установилась!')
+            sys.exit()
+        self.router = mikr_api.ApiRos(self.s)
+        logging.debug('Соединение по сети прошло успешно')
+
+
+    def login(self):
+        logging.debug('Попытка логина (авторизация)....')
+        with io.StringIO() as buf, redirect_stdout(buf):
+            self.router.login(conf.r1_login, conf.r1_passwd1)
+            output = buf.getvalue()
+            if ">>> =message=cannot log in" in output.split('\n'):
+                logging.critical('Логин или пароль не верен!')
+                sys.exit()
+            logging.debug('Логин прошел успешно')
+
+
 
     def set_combo_box(self):
         self.ui.comboBox.addItem('None')
-        for host in self.hosts:
-            self.ui.comboBox.addItem(self.hosts[host]['host-name'])
+        for host in self.hosts_dict:
+            self.ui.comboBox.addItem(self.hosts_dict[host]['host-name'])
 
     def run(self):
+        self.window.move(300, 300)
+        self.ui.setupUi(self.window)
+        self.set_combo_box()
         self.ui.pushButton.clicked.connect(self.button1)
         self.ui.pushButton_3.clicked.connect(self.button3)
         self.ui.pushButton_4.clicked.connect(self.refresh)
@@ -50,7 +98,7 @@ class MainWindow():
         self.windowbut1 = QMainWindow()
         self.windowbut1.move(700, 300)
         self.uibut1.setupUi(self.windowbut1)
-        if self.hosts[self.ui.comboBox.currentText()]['dynamic'] == 'false':
+        if self.hosts_dict[self.ui.comboBox.currentText()]['dynamic'] == 'false':
             self.uibut1.pushButton.setText('already static')
             self.uibut1.pushButton.setDisabled(True)
         else:
@@ -90,5 +138,13 @@ class MainWindow():
 
 
 
+if __name__ == '__main__':
+    with open('mikrotik.log', 'w') as file:
+        file.flush()
+    logging.basicConfig(filename='mikrotik.log', level=logging.WARNING)
+    logging.debug('Start')
+    logging.debug('Запускаем главное окно, передаем список хостов')
 
 
+    widget = MainWindow()
+    widget.run()

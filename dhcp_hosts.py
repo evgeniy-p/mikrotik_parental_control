@@ -19,7 +19,6 @@ class DhcpHosts:
             logging.debug('Получен ответ {}!'.format(answer))
             logging.debug('Введенный запрос не корректен!')
         else:
-            logging.debug('Получен ответ {}!'.format(answer))
             return answer
 
     def get_hosts(self):
@@ -37,10 +36,15 @@ class DhcpHosts:
         for host in range(0, len(self.hosts)):
             self.hosts[self.hosts[host]['host-name']] = self.hosts[host]
             self.hosts.pop(host)
+        logging.info('Хосты: {}'.format(self.hosts.keys()))
+        logging.debug(self.hosts)
         return self.hosts
 
-    def make_static(self, hostname):
-        for ID in self.hosts[hostname]:
-            logging.debug('Задаем статику для {}, ID - {}'.format(hostname, ID))
+    def make_static(self, **kwargs):
+        if 'host-name' in kwargs:
+            logging.debug('Задаем статику для {}, ID - {}'.format(kwargs['host-name'], kwargs['.id']))
             with io.StringIO() as buf, redirect_stdout(buf):
-                self.router.writeSentence(['/ip/dhcp-server/lease/make-static', ID])
+                self.router.writeSentence(['/ip/dhcp-server/lease/make-static', kwargs['.id']])
+
+    def remove_static(self, hostname):
+        pass
