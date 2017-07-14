@@ -17,7 +17,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow
 policy_can = ['ftp', 'reboot', 'read', 'write', 'policy', 'test', 'password', 'sniff', 'sensitive', 'romon']
 
 
-class MainWindow():
+class MainWindow:
     def __init__(self):
         self.app = QApplication(sys.argv)
         # Главное окно
