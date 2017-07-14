@@ -1,4 +1,5 @@
 import io
+import time
 import logging
 from contextlib import redirect_stdout
 from re import match
@@ -10,14 +11,14 @@ class DhcpHosts:
         self.router = router
 
     def talk(self, question):
-        logging.debug('Отправляю запрос {}....'.format(question))
+        logging.debug(time.ctime() + ' Отправляю запрос {}....'.format(question))
         with io.StringIO() as buf, redirect_stdout(buf):
             self.router.talk(["{}".format(question)])
             answer = buf.getvalue()
         if ">>> =message=no such command" in answer.split('\n') \
                 or ">>> =message=no such command prefix" in answer.split('\n'):
-            logging.debug('Получен ответ {}!'.format(answer))
-            logging.debug('Введенный запрос не корректен!')
+            logging.debug(time.ctime() + ' Получен ответ {}!'.format(answer))
+            logging.debug(time.ctime() + ' Введенный запрос не корректен!')
         else:
             return answer
 
@@ -36,13 +37,14 @@ class DhcpHosts:
         for host in range(0, len(self.hosts)):
             self.hosts[self.hosts[host]['host-name']] = self.hosts[host]
             self.hosts.pop(host)
-        logging.info('Хосты: {}'.format(self.hosts.keys()))
+        logging.info(time.ctime() + ' Хосты: {}'.format(self.hosts.keys()))
+        logging.debug(time.ctime() + ':')
         logging.debug(self.hosts)
         return self.hosts
 
     def make_static(self, **kwargs):
         if 'host-name' in kwargs:
-            logging.debug('Задаем статику для {}, ID - {}'.format(kwargs['host-name'], kwargs['.id']))
+            logging.debug(time.ctime() + ' Задаем статику для {}, ID - {}'.format(kwargs['host-name'], kwargs['.id']))
             with io.StringIO() as buf, redirect_stdout(buf):
                 self.router.writeSentence(['/ip/dhcp-server/lease/make-static', kwargs['.id']])
 
