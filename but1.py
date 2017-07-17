@@ -9,12 +9,9 @@
 from PyQt5 import QtCore, QtWidgets
 
 class Ui_Form(object):
-    def __init__(self):
-        self.hostname = None
-
     def setupUi(self, Form):
         Form.setObjectName("Form")
-        Form.resize(138, 181)
+        Form.resize(150, 181)
         self.pushButton = QtWidgets.QPushButton(Form)
         self.pushButton.setGeometry(QtCore.QRect(20, 10, 99, 27))
         self.pushButton.setObjectName("pushButton")
@@ -32,7 +29,7 @@ class Ui_Form(object):
 
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
-        Form.setWindowTitle(_translate("Form", self.hostname))
+        Form.setWindowTitle(_translate("Form", "None"))
         self.pushButton.setText(_translate("Form", "make static"))
         self.pushButton_2.setText(_translate("Form", "inet is on"))
         self.pushButton_3.setText(_translate("Form", "remove static"))

@@ -8,8 +8,6 @@ from contextlib import redirect_stdout
 from re import match
 import logging
 
-logging.basicConfig(filename='mikrotik.log', level=logging.DEBUG)
-
 class ApiRos:
     "Routeros api"
 
