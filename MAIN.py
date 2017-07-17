@@ -40,7 +40,7 @@ class MainWindow:
         self.windowbut3 = QMainWindow()
         self.windowbut3.move(700, 600)
         self.uibut3.setupUi(self.windowbut3)
-        logging.getLogger('root').handlers.append(logging.StreamHandler(Writer(self.uibut3)))
+        logging.getLogger('root').addHandler(logging.StreamHandler(Writer(self.uibut3)))
         # Окно кнопки sheldurer
         #self.uibut3 = logs.Ui_Form()
         #self.windowbut3 = QMainWindow()
