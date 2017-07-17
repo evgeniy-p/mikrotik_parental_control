@@ -40,7 +40,11 @@ class MainWindow:
         self.windowbut3 = QMainWindow()
         self.windowbut3.move(700, 600)
         self.uibut3.setupUi(self.windowbut3)
-        logging.getLogger('root').addHandler(logging.StreamHandler(Writer(self.uibut3)))
+        self.logger = logging.getLogger(__name__)
+        self.gui = logging.StreamHandler(Writer(self.uibut3))
+        self.logfile = logging.FileHandler('mikrotik.log')
+        self.logger.addHandler(self.gui)
+        self.logger.addHandler(self.logfile)
         # Окно кнопки sheldurer
         #self.uibut3 = logs.Ui_Form()
         #self.windowbut3 = QMainWindow()
@@ -50,7 +54,7 @@ class MainWindow:
         # Соединение с mikrotik
         self.start_connect()
         self.login()
-        logging.debug(' Запускаем главное окно, передаем список хостов')
+        self.logger.debug(' Запускаем главное окно, передаем список хостов')
         # обращаемся к классу, по которому можно получить список хостов, а также задать статику и т.п
         self.router_hosts = dhcp_hosts.DhcpHosts(self.router)
         self.hosts_dict = self.router_hosts.hosts
@@ -73,13 +77,13 @@ class MainWindow:
             self.uimessage.pushButton.clicked.connect(self.windowmessage.close)
             self.windowmessage.show()
             sys.exit(self.app.exec_())
-            logging.critical(' Соединение с mikrotik не установилась!')
+            self.logger.critical(' Соединение с mikrotik не установилась!')
             sys.exit()
         self.router = mikr_api.ApiRos(self.s)
-        logging.debug(' Соединение по сети прошло успешно')
+        self.logger.debug(' Соединение по сети прошло успешно')
 
     def login(self):
-        logging.debug(' Попытка логина (авторизация)....')
+        self.logger.debug(' Попытка логина (авторизация)....')
         with io.StringIO() as buf, redirect_stdout(buf):
             try:
                 self.router.login(conf.r1_login, conf.r1_passwd1)
@@ -91,13 +95,13 @@ class MainWindow:
                 sys.exit()
             output = buf.getvalue()
             if ">>> =message=cannot log in" in output.split('\n'):
-                logging.critical(' Логин или пароль не верен!')
+                self.logger.critical(' Логин или пароль не верен!')
                 self.uimessage.label.setText('    Не авторизован!')
                 self.uimessage.pushButton.clicked.connect(self.windowmessage.close)
                 self.windowmessage.show()
                 sys.exit(self.app.exec_())
                 sys.exit()
-            logging.debug(' Логин прошел успешно')
+            self.logger.debug(' Логин прошел успешно')
 
     def set_combo_box(self):
         self.Mui.comboBox.clear()
@@ -117,7 +121,7 @@ class MainWindow:
         if self.Mui.comboBox.currentText() == 'None':
             if self.windowbut1:
                 self.windowbut1.hide()
-            self.uibut3.textBrowser.appendPlainText(' host- none- warning')
+            self.logger.debug(' host- none- warning')
             self.uimessage.label.setText('   ВЫБЕРИТЕ ХОСТ!!!\nЕсли хостов нет -\nпопробуйте\n'
                                          'переподключить\nустройство к сети!')
             self.uimessage.pushButton.clicked.connect(self.windowmessage.hide)
@@ -125,10 +129,10 @@ class MainWindow:
             return
         if self.windowmessage:
             self.windowmessage.hide()
-        self.uibut3.textBrowser.appendPlainText(' button1 pressed')
+        self.logger.debug(' button1 pressed')
         self.windowbut1.setWindowTitle(self.Mui.comboBox.currentText())
         self.uibut1.hostname = self.Mui.comboBox.currentText()
-        self.uibut3.textBrowser.appendPlainText(' hostname {}'.format(self.Mui.comboBox.currentText()))
+        self.logger.debug(' hostname {}'.format(self.Mui.comboBox.currentText()))
         if self.hosts_dict[self.Mui.comboBox.currentText()]['dynamic'] == 'false':
             self.uibut1.pushButton.setText('already static')
             self.uibut1.pushButton.setDisabled(True)
@@ -155,7 +159,7 @@ class MainWindow:
         self.windowbut3.show()
 
     def pushbuttonbut1_1(self):
-        self.uibut3.textBrowser.appendPlainText(' pushbuttonbut1_1 pressed')
+        self.logger.debug(' pushbuttonbut1_1 pressed')
         self.router_hosts.make_static(self.Mui.comboBox.currentText())
         self.start_connect()
         self.login()
@@ -175,7 +179,7 @@ class MainWindow:
             self.uibut1.pushButton_3.setDisabled(True)
 
     def pushbuttonbut1_2(self):
-        self.uibut3.textBrowser.appendPlainText(' pushbuttonbut1_2 pressed')
+        self.logger.debug(' pushbuttonbut1_2 pressed')
         self.uibut1.pushButton_2.setText("inet is off")
         self.windowbut1.hide()
         self.Mui.comboBox.clear()
@@ -183,10 +187,10 @@ class MainWindow:
 
     def pushbuttonbut1_3(self):
         self.windowbut1.hide()
-        self.uibut3.textBrowser.appendPlainText(' pushbuttonbut1_3 pressed')
+        self.logger.debug(' pushbuttonbut1_3 pressed')
         self.router_hosts.remove_static(self.Mui.comboBox.currentText())
         self.refresh()
-        self.uibut3.textBrowser.appendPlainText(' lease remove- warning')
+        self.logger.debug(' lease remove- warning')
         self.uimessage.label.setText('Удалено!\nНужно будет\nпереподключить\nустройства к сети'
                                      '\nдля дальнейшей\nработы!')
         self.uimessage.pushButton.clicked.connect(self.windowmessage.hide)
@@ -196,8 +200,8 @@ class MainWindow:
         pass
 
     def refresh(self):
-        self.uibut3.textBrowser.appendPlainText(' refresh button pressed')
-        logging.debug(' Restart')
+        self.logger.debug(' refresh button pressed')
+        self.logger.debug(' Restart')
         self.Mui.comboBox.clear()
         self.start_connect()
         self.login()
@@ -214,6 +218,7 @@ class Writer:
     def __init__(self, widget):
         self.widget = widget
     def write(self, text):
+        print(text)
         self.widget.textBrowser.appendPlainText(text)
 
 
