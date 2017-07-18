@@ -34,3 +34,4 @@ class Ui_Form(object):
         self.pushButton.setText(_translate("Form", "PushButton"))
         self.pushButton_2.setText(_translate("Form", "PushButton"))
 
+
