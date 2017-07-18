@@ -174,6 +174,7 @@ class MainWindow:
             self.windowbut1.hide()
         self.windowbut3.show()
 
+
     def pushbuttonbut1_1(self):
         self.logger.debug(' pushbuttonbut1_1 pressed')
         self.router_hosts.make_static(self.Mui.comboBox.currentText())
