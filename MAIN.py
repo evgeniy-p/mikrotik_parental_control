@@ -114,6 +114,7 @@ class MainWindow:
 
     def run(self):
         self.set_combo_box()
+        self.logger.debug('заполняем выпадающий список')
         self.Mui.pushButton.clicked.connect(self.button1)
         self.Mui.pushButton_3.clicked.connect(self.button3)
         self.Mui.pushButton_4.clicked.connect(self.refresh)
@@ -121,8 +122,8 @@ class MainWindow:
         sys.exit(self.app.exec_())
 
     def button1(self):
+        self.logger.debug('"Изменить"')
         self.uibut1.pushButton.clicked.connect(self.pushbuttonbut1_1)
-        self.uibut1.pushButton_2.clicked.connect(self.pushbuttonbut1_2)
         self.uibut1.pushButton_3.clicked.connect(self.pushbuttonbut1_3)
         self.uibut1.pushButton_4.clicked.connect(self.pushbuttonbut1_4)
         if self.Mui.comboBox.currentText() == 'None':
@@ -144,9 +145,11 @@ class MainWindow:
         if self.router_filter.isblocked(self.Mui.comboBox.currentText()):
             self.uibut1.pushButton_2.setText("unblock inet")
             self.uibut1.pushButton_4.setDisabled(False)
+            self.uibut1.pushButton_2.clicked.connect(self.pushbuttonbut1_2)
         else:
             self.uibut1.pushButton_2.setText("block inet")
             self.uibut1.pushButton_4.setDisabled(True)
+            self.uibut1.pushButton_2.clicked.connect(self.pushbuttonbut1_2)
         self.dynamic()
 
     def dynamic(self):
@@ -164,6 +167,7 @@ class MainWindow:
             self.uibut1.pushButton_3.setDisabled(True)
 
     def button3(self):
+        self.logger.debug('"Логи"')
         if self.windowmessage:
             self.windowmessage.hide()
         if self.windowbut1:
@@ -203,7 +207,6 @@ class MainWindow:
 
     def pushbuttonbut1_4(self):
         self.windowshed_but.show()
-
 
     def refresh(self):
         self.logger.debug(' refresh button pressed')

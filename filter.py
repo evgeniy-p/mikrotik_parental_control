@@ -5,7 +5,7 @@ from contextlib import redirect_stdout
 from re import match
 
 
-class Filter():
+class Filter:
     def __init__(self, router):
         self.router = router
         self.ids = dict()
