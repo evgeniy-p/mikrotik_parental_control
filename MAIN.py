@@ -8,8 +8,10 @@ import conf
 import sys
 import io
 import dhcp_hosts
+import filter
 import scirpt
 import scheduler
+import sched_but
 import logging
 from contextlib import redirect_stdout
 from PyQt5.QtWidgets import QApplication, QMainWindow
@@ -45,12 +47,11 @@ class MainWindow:
         self.logfile = logging.FileHandler('mikrotik.log')
         self.logger.addHandler(self.gui)
         self.logger.addHandler(self.logfile)
-        # Окно кнопки sheldurer
-        #self.uibut3 = logs.Ui_Form()
-        #self.windowbut3 = QMainWindow()
-        #self.windowbut3.move(700, 600)
-        #self.uibut3.setupUi(self.windowbut3)
-        self.writer = Writer(self.uibut3)
+        # Окно кнопки sched_but
+        self.uished_but = sched_but.Ui_Form()
+        self.windowshed_but = QMainWindow()
+        self.windowshed_but.move(700, 600)
+        self.uished_but.setupUi(self.windowshed_but)
         # Соединение с mikrotik
         self.start_connect()
         self.login()
@@ -58,6 +59,8 @@ class MainWindow:
         # обращаемся к классу, по которому можно получить список хостов, а также задать статику и т.п
         self.router_hosts = dhcp_hosts.DhcpHosts(self.router)
         self.hosts_dict = self.router_hosts.hosts
+        # обращаемся к классу, по которому можно создать\удалить правило в firewall
+        self.router_filter = filter.Filter(self.router)
         # Обращаемся к классу, по которому можно создать скрипт и получить его id для дальнейшего управления
         #script_id = scirpt.Scripts(router)
         # script_id.choose_policy(policy_can[3], policy_can[2])
@@ -118,6 +121,10 @@ class MainWindow:
         sys.exit(self.app.exec_())
 
     def button1(self):
+        self.uibut1.pushButton.clicked.connect(self.pushbuttonbut1_1)
+        self.uibut1.pushButton_2.clicked.connect(self.pushbuttonbut1_2)
+        self.uibut1.pushButton_3.clicked.connect(self.pushbuttonbut1_3)
+        self.uibut1.pushButton_4.clicked.connect(self.pushbuttonbut1_4)
         if self.Mui.comboBox.currentText() == 'None':
             if self.windowbut1:
                 self.windowbut1.hide()
@@ -133,6 +140,16 @@ class MainWindow:
         self.windowbut1.setWindowTitle(self.Mui.comboBox.currentText())
         self.uibut1.hostname = self.Mui.comboBox.currentText()
         self.logger.debug(' hostname {}'.format(self.Mui.comboBox.currentText()))
+        self.windowbut1.show()
+        if self.router_filter.isblocked(self.Mui.comboBox.currentText()):
+            self.uibut1.pushButton_2.setText("unblock inet")
+            self.uibut1.pushButton_4.setDisabled(False)
+        else:
+            self.uibut1.pushButton_2.setText("block inet")
+            self.uibut1.pushButton_4.setDisabled(True)
+        self.dynamic()
+
+    def dynamic(self):
         if self.hosts_dict[self.Mui.comboBox.currentText()]['dynamic'] == 'false':
             self.uibut1.pushButton.setText('already static')
             self.uibut1.pushButton.setDisabled(True)
@@ -145,11 +162,6 @@ class MainWindow:
             self.uibut1.pushButton_2.setDisabled(True)
             self.uibut1.pushButton.setDisabled(False)
             self.uibut1.pushButton_3.setDisabled(True)
-        self.uibut1.pushButton.clicked.connect(self.pushbuttonbut1_1)
-        self.uibut1.pushButton_2.clicked.connect(self.pushbuttonbut1_2)
-        self.uibut1.pushButton_3.clicked.connect(self.pushbuttonbut1_3)
-
-        self.windowbut1.show()
 
     def button3(self):
         if self.windowmessage:
@@ -165,25 +177,18 @@ class MainWindow:
         self.login()
         self.router_hosts = dhcp_hosts.DhcpHosts(self.router)
         self.hosts_dict = self.router_hosts.hosts
-        if self.hosts_dict[self.Mui.comboBox.currentText()]['dynamic'] == 'false':
-            self.uibut1.pushButton.setText('already static')
-            self.uibut1.pushButton.setDisabled(True)
-            self.uibut1.pushButton_3.setDisabled(False)
-            self.uibut1.pushButton_2.setDisabled(False)
-            self.uibut1.pushButton_4.setDisabled(False)
-        else:
-            self.uibut1.pushButton_4.setDisabled(True)
-            self.uibut1.pushButton.setText('make static')
-            self.uibut1.pushButton_2.setDisabled(True)
-            self.uibut1.pushButton.setDisabled(False)
-            self.uibut1.pushButton_3.setDisabled(True)
+        self.dynamic()
 
     def pushbuttonbut1_2(self):
         self.logger.debug(' pushbuttonbut1_2 pressed')
-        self.uibut1.pushButton_2.setText("inet is off")
-        self.windowbut1.hide()
-        self.Mui.comboBox.clear()
-        self.set_combo_box()
+        if self.router_filter.isblocked(self.Mui.comboBox.currentText()):
+            self.router_filter.delete_rule(self.Mui.comboBox.currentText())
+            self.uibut1.pushButton_2.setText("block inet")
+            self.uibut1.pushButton_4.setDisabled(False)
+        else:
+            self.router_filter.forwardblock(self.Mui.comboBox.currentText())
+            self.uibut1.pushButton_2.setText("unblock inet")
+            self.uibut1.pushButton_4.setDisabled(True)
 
     def pushbuttonbut1_3(self):
         self.windowbut1.hide()
@@ -197,7 +202,8 @@ class MainWindow:
         self.windowmessage.show()
 
     def pushbuttonbut1_4(self):
-        pass
+        self.windowshed_but.show()
+
 
     def refresh(self):
         self.logger.debug(' refresh button pressed')
@@ -208,8 +214,6 @@ class MainWindow:
         self.router_hosts = dhcp_hosts.DhcpHosts(self.router)
         self.hosts_dict = self.router_hosts.hosts
         self.set_combo_box()
-        if self.windowmessage:
-            self.windowmessage.hide()
         if self.windowbut1:
             self.windowbut1.hide()
 
@@ -218,7 +222,6 @@ class Writer:
     def __init__(self, widget):
         self.widget = widget
     def write(self, text):
-        print(text)
         self.widget.textBrowser.appendPlainText(text)
 
 
