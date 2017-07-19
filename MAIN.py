@@ -27,11 +27,18 @@ class MainWindow:
         self.Mwindow = QMainWindow()
         self.Mwindow.move(300, 300)
         self.Mui.setupUi(self.Mwindow)
+        self.Mui.pushButton.clicked.connect(self.button1)
+        self.Mui.pushButton_3.clicked.connect(self.button3)
+        self.Mui.pushButton_4.clicked.connect(self.refresh)
         # Окно кнопки 1
         self.uibut1 = but1.Ui_Form()
         self.windowbut1 = QMainWindow()
         self.windowbut1.move(700, 300)
         self.uibut1.setupUi(self.windowbut1)
+        self.uibut1.pushButton.clicked.connect(self.pushbuttonbut1_1)
+        self.uibut1.pushButton_2.clicked.connect(self.pushbuttonbut1_2)
+        self.uibut1.pushButton_3.clicked.connect(self.pushbuttonbut1_3)
+        self.uibut1.pushButton_4.clicked.connect(self.pushbuttonbut1_4)
         # Окно сообщения об ошибке
         self.uimessage = message.Ui_Form()
         self.windowmessage = QMainWindow()
@@ -115,17 +122,12 @@ class MainWindow:
     def run(self):
         self.set_combo_box()
         self.logger.debug('заполняем выпадающий список')
-        self.Mui.pushButton.clicked.connect(self.button1)
-        self.Mui.pushButton_3.clicked.connect(self.button3)
-        self.Mui.pushButton_4.clicked.connect(self.refresh)
         self.Mwindow.show()
         sys.exit(self.app.exec_())
 
     def button1(self):
         self.logger.debug('"Изменить"')
-        self.uibut1.pushButton.clicked.connect(self.pushbuttonbut1_1)
-        self.uibut1.pushButton_3.clicked.connect(self.pushbuttonbut1_3)
-        self.uibut1.pushButton_4.clicked.connect(self.pushbuttonbut1_4)
+
         if self.Mui.comboBox.currentText() == 'None':
             if self.windowbut1:
                 self.windowbut1.hide()
@@ -145,11 +147,9 @@ class MainWindow:
         if self.router_filter.isblocked(self.Mui.comboBox.currentText()):
             self.uibut1.pushButton_2.setText("unblock inet")
             self.uibut1.pushButton_4.setDisabled(False)
-            self.uibut1.pushButton_2.clicked.connect(self.pushbuttonbut1_2)
         else:
             self.uibut1.pushButton_2.setText("block inet")
             self.uibut1.pushButton_4.setDisabled(True)
-            self.uibut1.pushButton_2.clicked.connect(self.pushbuttonbut1_2)
         self.dynamic()
 
     def dynamic(self):
@@ -174,7 +174,6 @@ class MainWindow:
             self.windowbut1.hide()
         self.windowbut3.show()
 
-
     def pushbuttonbut1_1(self):
         self.logger.debug(' pushbuttonbut1_1 pressed')
         self.router_hosts.make_static(self.Mui.comboBox.currentText())
@@ -194,6 +193,7 @@ class MainWindow:
             self.router_filter.forwardblock(self.Mui.comboBox.currentText())
             self.uibut1.pushButton_2.setText("unblock inet")
             self.uibut1.pushButton_4.setDisabled(True)
+        self.router_filter = filter.Filter(self.router)
 
     def pushbuttonbut1_3(self):
         self.windowbut1.hide()
