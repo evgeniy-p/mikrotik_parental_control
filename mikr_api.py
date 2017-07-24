@@ -164,7 +164,7 @@ class ApiRos:
             ret += s.decode('UTF-8', 'replace')
         return ret
 
-    def get_item_id(self, question):
+    def talk_buff(self, question):
         logging.debug('Отправляю запрос {}'.format(question))
         with io.StringIO() as buf, redirect_stdout(buf):
             self.writeSentence(question)
@@ -174,18 +174,13 @@ class ApiRos:
         if '>>> =message=failure: item with such name already exists' in answer.split('\n') or \
                 '>>> =message=failure: item with this name already exists' in answer.split('\n'):
             logging.warning('Указанный item уже существует!!!')
-            return
-        for line in answer.split('\n'):
-            if match('^.*=ret=.*$', line):
-                ID_ITEM = match('^.*=ret=(.*)$', line).group(1)
-                return ID_ITEM
-            if match('^.*=.id=.*$', line):
-                ID_ITEM = match('^.*=.id=(.*)$', line).group(1)
-                return ID_ITEM
+            return True
+        else:
+            return False
 
 def main(ipaddr):
     s = None
-    for res in socket.getaddrinfo(ipaddr, "8728", socket.AF_UNSPEC, socket.SOCK_STREAM):
+    for res in socket.getaddrinfo(ipaddr, "8728", socket.AF_INET, socket.SOCK_STREAM):
         af, socktype, proto, canonname, sa = res
         try:
             s = socket.socket(af, socktype, proto)

@@ -10,7 +10,6 @@ import io
 import dhcp_hosts
 import filter
 import scirpt
-import scheduler
 import sched_but
 import logging
 from contextlib import redirect_stdout
@@ -33,12 +32,19 @@ class MainWindow:
         # Окно кнопки 1
         self.uibut1 = but1.Ui_Form()
         self.windowbut1 = QMainWindow()
-        self.windowbut1.move(700, 300)
         self.uibut1.setupUi(self.windowbut1)
         self.uibut1.pushButton.clicked.connect(self.pushbuttonbut1_1)
         self.uibut1.pushButton_2.clicked.connect(self.pushbuttonbut1_2)
         self.uibut1.pushButton_3.clicked.connect(self.pushbuttonbut1_3)
         self.uibut1.pushButton_4.clicked.connect(self.pushbuttonbut1_4)
+        # Окно кнопки 1-4 (расписание)
+        self.uibut2 = but1.Ui_Form()
+        self.windowbut2 = QMainWindow()
+        self.uibut2.setupUi(self.windowbut2)
+        self.uibut2.pushButton.clicked.connect(self.pushbuttonbut2_4)
+        self.uibut2.pushButton_2.clicked.connect(self.pushbuttonbut2_4)
+        self.uibut2.pushButton_3.clicked.connect(self.pushbuttonbut2_4)
+        self.uibut2.pushButton_4.clicked.connect(self.pushbuttonbut2_4)
         # Окно сообщения об ошибке
         self.uimessage = message.Ui_Form()
         self.windowmessage = QMainWindow()
@@ -55,11 +61,22 @@ class MainWindow:
         self.logger.addHandler(self.gui)
         self.logger.addHandler(self.logfile)
         # Окно кнопки sched_but
+        self.date_time = None
         self.uished_but = sched_but.Ui_Form()
         self.windowshed_but = QMainWindow()
         self.windowshed_but.move(700, 600)
         self.uished_but.setupUi(self.windowshed_but)
+        self.uished_but.dateTimeEdit_3.setDisabled(True)
+        self.uished_but.dateTimeEdit_4.setDisabled(True)
+        self.uished_but.dateTimeEdit_5.setDisabled(True)
+        self.uished_but.dateTimeEdit_6.setDisabled(True)
+        self.time_disabeled_3_4 = True
+        self.time_disabeled_5_6 = True
+        self.uished_but.pushButton_2.clicked.connect(self.set_en_3_4)
+        self.uished_but.pushButton_3.clicked.connect(self.set_en_5_6)
         # Соединение с mikrotik
+        self.s = None
+        self.router = None
         self.start_connect()
         self.login()
         self.logger.debug(' Запускаем главное окно, передаем список хостов')
@@ -68,17 +85,37 @@ class MainWindow:
         self.hosts_dict = self.router_hosts.hosts
         # обращаемся к классу, по которому можно создать\удалить правило в firewall
         self.router_filter = filter.Filter(self.router)
-        # Обращаемся к классу, по которому можно создать скрипт и получить его id для дальнейшего управления
-        #script_id = scirpt.Scripts(router)
+        # Обращаемся к классу, по которому можно создать скрипт и получить его id
+        self.wwscript = scirpt.Scripts(self.router)
         # script_id.choose_policy(policy_can[3], policy_can[2])
         # script_id.make('script', 'test_script32')
         # id1 = script_id.id
 
         # Обращаемся к классу, по которому можно создать правило расписания и получить его id для дальнейшего управления
-        #scheld_id = scheduler.Scheduler(router)
-        # scheld_id.choose_policy(policy_can[3], policy_can[2])
-        # scheld_id.make('scheduler', 'test_scheld')
-        # id2 = scheld_id.id
+
+    def set_en_3_4(self):
+        if self.time_disabeled_3_4:
+            self.uished_but.pushButton_2.setText('-')
+            self.uished_but.dateTimeEdit_3.setDisabled(False)
+            self.uished_but.dateTimeEdit_4.setDisabled(False)
+            self.time_disabeled_3_4 = False
+        else:
+            self.uished_but.pushButton_2.setText('+')
+            self.uished_but.dateTimeEdit_3.setDisabled(True)
+            self.uished_but.dateTimeEdit_4.setDisabled(True)
+            self.time_disabeled_3_4 = True
+
+    def set_en_5_6(self):
+        if self.time_disabeled_5_6:
+            self.uished_but.pushButton_3.setText('-')
+            self.uished_but.dateTimeEdit_5.setDisabled(False)
+            self.uished_but.dateTimeEdit_6.setDisabled(False)
+            self.time_disabeled_5_6 = False
+        else:
+            self.uished_but.pushButton_3.setText('+')
+            self.uished_but.dateTimeEdit_5.setDisabled(True)
+            self.uished_but.dateTimeEdit_6.setDisabled(True)
+            self.time_disabeled_5_6 = True
 
     def start_connect(self):
         self.s = mikr_api.main(conf.r1_ipaddr)
@@ -86,9 +123,8 @@ class MainWindow:
             self.uimessage.label.setText('Нет соединения!!!!')
             self.uimessage.pushButton.clicked.connect(self.windowmessage.close)
             self.windowmessage.show()
-            sys.exit(self.app.exec_())
             self.logger.critical(' Соединение с mikrotik не установилась!')
-            sys.exit()
+            sys.exit(self.app.exec_())
         self.router = mikr_api.ApiRos(self.s)
         self.logger.debug(' Соединение по сети прошло успешно')
 
@@ -126,6 +162,8 @@ class MainWindow:
         sys.exit(self.app.exec_())
 
     def button1(self):
+        self.windowbut1.move(700, 300)
+        self.windowbut2.close()
         self.logger.debug('"Изменить"')
 
         if self.Mui.comboBox.currentText() == 'None':
@@ -153,18 +191,21 @@ class MainWindow:
         self.dynamic()
 
     def dynamic(self):
-        if self.hosts_dict[self.Mui.comboBox.currentText()]['dynamic'] == 'false':
-            self.uibut1.pushButton.setText('already static')
-            self.uibut1.pushButton.setDisabled(True)
-            self.uibut1.pushButton_3.setDisabled(False)
-            self.uibut1.pushButton_2.setDisabled(False)
-            self.uibut1.pushButton_4.setDisabled(False)
-        else:
-            self.uibut1.pushButton_4.setDisabled(True)
-            self.uibut1.pushButton.setText('make static')
-            self.uibut1.pushButton_2.setDisabled(True)
-            self.uibut1.pushButton.setDisabled(False)
-            self.uibut1.pushButton_3.setDisabled(True)
+        try:
+            if self.hosts_dict[self.Mui.comboBox.currentText()]['dynamic'] == 'false':
+                self.uibut1.pushButton.setText('already static')
+                self.uibut1.pushButton.setDisabled(True)
+                self.uibut1.pushButton_3.setDisabled(False)
+                self.uibut1.pushButton_2.setDisabled(False)
+                self.uibut1.pushButton_4.setDisabled(False)
+            else:
+                self.uibut1.pushButton_4.setDisabled(True)
+                self.uibut1.pushButton.setText('make static')
+                self.uibut1.pushButton_2.setDisabled(True)
+                self.uibut1.pushButton.setDisabled(False)
+                self.uibut1.pushButton_3.setDisabled(True)
+        except KeyError:
+            self.no_shuch_host()
 
     def button3(self):
         self.logger.debug('"Логи"')
@@ -184,16 +225,19 @@ class MainWindow:
         self.dynamic()
 
     def pushbuttonbut1_2(self):
+        self.windowshed_but.close()
+        self.router_filter = filter.Filter(self.router)
         self.logger.debug(' pushbuttonbut1_2 pressed')
         if self.router_filter.isblocked(self.Mui.comboBox.currentText()):
             self.router_filter.delete_rule(self.Mui.comboBox.currentText())
             self.uibut1.pushButton_2.setText("block inet")
+            self.uibut1.pushButton_3.setDisabled(False)
             self.uibut1.pushButton_4.setDisabled(False)
         else:
             self.router_filter.forwardblock(self.Mui.comboBox.currentText())
             self.uibut1.pushButton_2.setText("unblock inet")
+            self.uibut1.pushButton_3.setDisabled(True)
             self.uibut1.pushButton_4.setDisabled(True)
-        self.router_filter = filter.Filter(self.router)
 
     def pushbuttonbut1_3(self):
         self.windowbut1.hide()
@@ -206,8 +250,29 @@ class MainWindow:
         self.uimessage.pushButton.clicked.connect(self.windowmessage.hide)
         self.windowmessage.show()
 
+# self.wwscript.make_script(self.Mui.comboBox.currentText(),
+#                                  self.hosts_dict[self.Mui.comboBox.currentText()]['address'])
     def pushbuttonbut1_4(self):
+        self.windowbut2.move(800, 300)
+        self.windowbut2.setWindowTitle('Расписание')
+        self.uibut2.pushButton.setText('Настроить')
+
+        self.uibut2.pushButton_2.setText("Включить")
+        self.uibut2.pushButton_3.setText("Выключить")
+        self.uibut2.pushButton_4.setText('Удалить')
+
+        self.windowbut1.close()
+        self.windowbut2.show()
+
+    def pushbuttonbut2_4(self):
+        self.date_time = list()
+        self.uished_but.pushButton.clicked.connect(self.get_time)
         self.windowshed_but.show()
+
+    def get_time(self):
+        self.uished_but.dateTimeEdit.dateTime()
+        print(self.uished_but.dateTimeEdit.dateTime())
+        print(self.uished_but.dateTimeEdit.dateTime().toString(format('dd.MM.yyyy')))
 
     def refresh(self):
         self.logger.debug(' refresh button pressed')
@@ -220,6 +285,11 @@ class MainWindow:
         self.set_combo_box()
         if self.windowbut1:
             self.windowbut1.hide()
+
+    def no_shuch_host(self):
+        self.uimessage.label.setText('Нажмите "Обновить"')
+        self.uimessage.pushButton.clicked.connect(self.windowmessage.close)
+        self.windowmessage.show()
 
 
 class Writer:

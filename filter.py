@@ -13,6 +13,7 @@ class Filter:
         self.hosts_dict = dhcp_hosts.DhcpHosts.hosts
 
     def forwardblock(self, host):
+        self.hosts_dict = dhcp_hosts.DhcpHosts.hosts
         with io.StringIO() as buf, redirect_stdout(buf):
             self.router.talk(['/ip/firewall/filter/add', '=chain=forward', '=action=reject',
                               '=reject-with=icmp-admin-prohibited', '=out-interface=all-ethernet',
@@ -22,6 +23,7 @@ class Filter:
             logging.debug(answer)
 
     def isblocked(self, host):
+        self.hosts_dict = dhcp_hosts.DhcpHosts.hosts
         with io.StringIO() as buf, redirect_stdout(buf):
             self.router.talk(['/ip/firewall/filter/print', '?comment=by_api_' + self.hosts_dict[host]['address']])
             self.answer = buf.getvalue()
@@ -35,6 +37,7 @@ class Filter:
             return False
 
     def delete_rule(self, host):
+        self.hosts_dict = dhcp_hosts.DhcpHosts.hosts
         with io.StringIO() as buf, redirect_stdout(buf):
             self.router.talk(['/ip/firewall/filter/remove', '=.id=' + self.ids[host]])
             self.answer = buf.getvalue()
