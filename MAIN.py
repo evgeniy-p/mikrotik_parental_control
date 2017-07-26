@@ -65,7 +65,7 @@ class MainWindow:
         self.uibut1.pushButton_2.clicked.connect(self.pushbuttonbut1_2)
         self.uibut1.pushButton_3.clicked.connect(self.pushbuttonbut1_3)
         self.uibut1.pushButton_4.clicked.connect(self.pushbuttonbut1_4)
-        # Окно кнопки 1-4 (расписание)
+        # Окно кнопки 2(1-4) (расписание)
         self.uibut2 = but1.Ui_Form()
         self.windowbut2 = QMainWindow()
         self.uibut2.setupUi(self.windowbut2)
@@ -258,7 +258,7 @@ class MainWindow:
     def buttonbut1_2(self):
         if self.router_filter.isblocked(self.Mui.comboBox.currentText(), 'block'):
             self.logger.debug('turn on internet "' + self.Mui.comboBox.currentText() + '" enable host in firewall')
-            self.router_filter.delete_rule(self.Mui.comboBox.currentText())
+            self.router_filter.delete_rule(self.Mui.comboBox.currentText(), 'block')
             self.uibut1.pushButton_2.setText("block inet")
             self.uibut1.pushButton_3.setDisabled(False)
             self.uibut1.pushButton_4.setDisabled(False)
@@ -283,90 +283,134 @@ class MainWindow:
         self.windowbut2.move(800, 300)
         self.windowbut2.setWindowTitle('Расписание')
         self.uibut2.pushButton.setText('Настроить')
-
+        if self.router_filter.isblocked(self.Mui.comboBox.currentText(), 'sched'):
+            self.logger.debug('Правила в firewall уже созданы')
+            self.uibut2.pushButton_2.setDisabled(False)
+            self.uibut2.pushButton_3.setDisabled(True)
+            self.uibut2.pushButton_4.setDisabled(False)
         self.uibut2.pushButton_2.setText("Включить")
         self.uibut2.pushButton_3.setText("Выключить")
         self.uibut2.pushButton_4.setText('Удалить')
-
         self.windowbut1.close()
         self.windowbut2.show()
 
     def pushbuttonbut2_1(self):
         self.uished_but.pushButton.clicked.connect(self.set_time)
-        self.date_en, self.interval_en = self.scheduler.show_shed(self.Mui.comboBox.currentText(), 'Enable_1')
-        self.date_dis, self.interval_en = self.scheduler.show_shed(self.Mui.comboBox.currentText(), 'Disable_1')
-        self.date_en2, self.interval_en2 = self.scheduler.show_shed(self.Mui.comboBox.currentText(), 'Enable_2')
-        self.date_dis2, self.interval_en2 = self.scheduler.show_shed(self.Mui.comboBox.currentText(), 'Disable_2')
+        self.date_en, self.date_dis, self.interval_en = self.show_current_sched_rules('Enable_1', 'Disable_1')
+        self.date_en2, self.date_dis2, self.interval_en2 = self.show_current_sched_rules('Enable_2', 'Disable_2')
         if self.date_en:
-            date_en = QtCore.QDateTime(QtCore.QDate(self.date_en[2], self.date_en[1], self.date_en[0]),
-                                       QtCore.QTime(self.date_en[3], self.date_en[4], self.date_en[5]))
-            date_dis = QtCore.QDateTime(QtCore.QDate(self.date_dis[2], self.date_dis[1], self.date_dis[0]),
-                                        QtCore.QTime(self.date_dis[3], self.date_dis[4], self.date_dis[5]))
-            self.uished_but.dateTimeEdit.setDateTime(date_en)
-            self.uished_but.dateTimeEdit_3.setDateTime(date_dis)
-        if self.interval_en == '1d':
-            self.uished_but.radioButton.setChecked(True)
-        elif self.interval_en == '1w':
-            self.uished_but.radioButton_2.setChecked(True)
-        else:
-            self.uished_but.radioButton_3.setChecked(True)
-        if self.interval_en2 == '1d':
-            self.uished_but.radioButton_6.setChecked(True)
-        elif self.interval_en2 == '1w':
-            self.uished_but.radioButton_5.setChecked(True)
-        else:
-            self.uished_but.radioButton_4.setChecked(True)
+            self.get_time(self.date_en, self.date_dis, self.uished_but.dateTimeEdit, self.uished_but.dateTimeEdit_3)
+        if self.date_en2:
+            self.get_time(self.date_en2, self.date_dis2, self.uished_but.dateTimeEdit_2, self.uished_but.dateTimeEdit_4)
+        self.set_rbut(self.uished_but.radioButton, self.uished_but.radioButton_2, self.uished_but.radioButton_3,
+                      self.interval_en)
+        self.set_rbut(self.uished_but.radioButton_6, self.uished_but.radioButton_5, self.uished_but.radioButton_4,
+                      self.interval_en2)
         self.windowshed_but.show()
 
+    def show_current_sched_rules(self, first, second):
+        date_en, interval = self.scheduler.show_shed(self.Mui.comboBox.currentText(), first)
+        date_dis, interval = self.scheduler.show_shed(self.Mui.comboBox.currentText(), second)
+        return date_en, date_dis, interval
+
+    def get_time(self, de, dd, qdt1, qdt2):
+        date_enable = QtCore.QDateTime(QtCore.QDate(de[2], de[1], de[0]), QtCore.QTime(de[3], de[4], de[5]))
+        date_disable = QtCore.QDateTime(QtCore.QDate(dd[2], dd[1], dd[0]), QtCore.QTime(dd[3], dd[4], dd[5]))
+        qdt1.setDateTime(date_enable)
+        qdt2.setDateTime(date_disable)
+
+    def set_rbut(self, but1, but2, but3, interval):
+        if interval == '1d':
+            but1.setChecked(True)
+        elif interval == '1w':
+            but2.setChecked(True)
+        else:
+            but3.setChecked(True)
+
     def set_time(self):
-        if not self.wwscript.script_is_here(self.Mui.comboBox.currentText(), 'Enable_1'):
-            self.wwscript.make_script(self.Mui.comboBox.currentText(),
-                                      self.hosts_dict[self.Mui.comboBox.currentText()]['address'], 'Enable_1', 'no')
-            self.wwscript.make_script(self.Mui.comboBox.currentText(),
-                                      self.hosts_dict[self.Mui.comboBox.currentText()]['address'], 'Disable_1', 'yes')
-        if not self.router_filter.isblocked(self.Mui.comboBox.currentText(),
-                                            'sched_' + self.hosts_dict[self.Mui.comboBox.currentText()]['address']):
+        self.Mui.pushButton.setText('wait...')
+        self.Mui.pushButton.setDisabled(True)
+        self.windowbut2.close()
+        self.windowshed_but.close()
+        QtCore.QTimer.singleShot(4000, self.unhide)
+        if not self.router_filter.isblocked(self.Mui.comboBox.currentText(), 'sched'):
             self.router_filter.forwardblock(self.Mui.comboBox.currentText(), 'sched')
             self.router_filter.disable_rule(self.Mui.comboBox.currentText(), 'sched')
+        self.uibut2.pushButton.setDisabled(True)
+        self.uibut2.pushButton_2.setDisabled(False)
+        self.uibut2.pushButton_3.setDisabled(True)
+        self.uibut2.pushButton_4.setDisabled(False)
         if self.date_en:
-            self.scheduler.remove_shed(self.Mui.comboBox.currentText(), 'Enable_1')
-            self.scheduler.remove_shed(self.Mui.comboBox.currentText(), 'Disable_1')
+            self.delete_old_rules('Enable_1', 'Disable_1')
+        if self.date_en2:
+            self.delete_old_rules('Enable_2', 'Disable_2')
+        self.init_script('Enable_1', 'Disable_1')
         self.date_en = self.uished_but.dateTimeEdit.dateTime().toString(format('MM*dd/yyyy*hh:mm:ss'))
         self.date_dis = self.uished_but.dateTimeEdit_3.dateTime().toString(format('MM*dd/yyyy*hh:mm:ss'))
-        if self.uished_but.radioButton.isChecked():
-            self.interval_en = '1d 00:00:00'
-        elif self.uished_but.radioButton_2.isChecked():
-            self.interval_en = '7d 00:00:00'
-        else:
-            self.interval_en = '365d 00:00:00'
-        if not self.time_disabeled_2:
-            self.date_en2 = self.uished_but.dateTimeEdit_2.dateTime().toString(format('MM*dd/yyyy*hh:mm:ss'))
-            self.date_dis2 = self.uished_but.dateTimeEdit_4.dateTime().toString(format('MM*dd/yyyy*hh:mm:ss'))
-            if self.uished_but.radioButton_6.isChecked():
-                self.interval_en2 = '1d 00:00:00'
-            elif self.uished_but.radioButton_5.isChecked():
-                self.interval_en2 = '7d 00:00:00'
-            else:
-                self.interval_en2 = '365d 00:00:00'
+        self.interval_en = self.check_button(self.uished_but.radioButton, self.uished_but.radioButton_2)
         self.scheduler.make_sched(self.Mui.comboBox.currentText(), self.date_en, self.interval_en, 'Enable_1')
         self.scheduler.make_sched(self.Mui.comboBox.currentText(), self.date_dis, self.interval_en, 'Disable_1')
-        self.uimessage.label.setText(' Ожидайте 10\nсекунд....\nМожно проверять!')
-        self.uimessage.pushButton.clicked.connect(self.windowmessage.hide)
-        self.windowmessage.show()
-        self.windowshed_but.close()
+        if not self.time_disabeled_2:
+            self.init_script('Enable_2', 'Disable_2')
+            self.date_en2 = self.uished_but.dateTimeEdit_2.dateTime().toString(format('MM*dd/yyyy*hh:mm:ss'))
+            self.date_dis2 = self.uished_but.dateTimeEdit_4.dateTime().toString(format('MM*dd/yyyy*hh:mm:ss'))
+            self.interval_en2 = self.check_button(self.uished_but.radioButton_6, self.uished_but.radioButton_5)
+            self.scheduler.make_sched(self.Mui.comboBox.currentText(), self.date_en2, self.interval_en2, 'Enable_2')
+            self.scheduler.make_sched(self.Mui.comboBox.currentText(), self.date_dis2, self.interval_en2, 'Disable_2')
+
+    def unhide(self):
+        self.Mui.pushButton.setText('Изменить')
+        self.Mui.pushButton.setDisabled(False)
+        self.uibut2.pushButton.setText('Настроить')
+        self.uibut2.pushButton.setDisabled(False)
+
+    def init_script(self, first, second):
+        if not self.wwscript.script_is_here(self.Mui.comboBox.currentText(), first):
+            self.wwscript.make_script(self.Mui.comboBox.currentText(),
+                                      self.hosts_dict[self.Mui.comboBox.currentText()]['address'], first, 'no')
+            self.wwscript.make_script(self.Mui.comboBox.currentText(),
+                                      self.hosts_dict[self.Mui.comboBox.currentText()]['address'], second, 'yes')
+
+    def delete_old_rules(self, first, second):
+        self.scheduler.remove_shed(self.Mui.comboBox.currentText(), first)
+        self.scheduler.remove_shed(self.Mui.comboBox.currentText(), second)
+        self.wwscript.remove_script(self.Mui.comboBox.currentText(), first)
+        self.wwscript.remove_script(self.Mui.comboBox.currentText(), second)
+
+    def check_button(self, rbut1, rbut2):
+        if rbut1.isChecked():
+            interval = '1d 00:00:00'
+        elif rbut2.isChecked():
+            interval = '7d 00:00:00'
+        else:
+            interval = '365d 00:00:00'
+        return interval
 
     def pushbuttonbut2_2(self):
-        # turn on schelude
+        self.change_stat('no')
         self.uibut2.pushButton_2.setDisabled(True)
         self.uibut2.pushButton_3.setDisabled(False)
 
+    def change_stat(self, disable='yes'):
+        self.scheduler.modify_shed(self.Mui.comboBox.currentText(), 'Enable_1', disable)
+        self.scheduler.modify_shed(self.Mui.comboBox.currentText(), 'Disable_1', disable)
+        self.scheduler.modify_shed(self.Mui.comboBox.currentText(), 'Enable_2', disable)
+        self.scheduler.modify_shed(self.Mui.comboBox.currentText(), 'Disable_2', disable)
+
     def pushbuttonbut2_3(self):
-        # turn off schelude
+        self.change_stat()
         self.uibut2.pushButton_2.setDisabled(False)
         self.uibut2.pushButton_3.setDisabled(True)
 
     def pushbuttonbut2_4(self):
-        # delete script,schelude, firewall rules
+        self.uibut2.pushButton.setText('wait...')
+        self.uibut2.pushButton.setDisabled(True)
+        self.Mui.pushButton.setText('wait...')
+        self.Mui.pushButton.setDisabled(True)
+        QtCore.QTimer.singleShot(4000, self.unhide)
+        self.delete_old_rules('Enable_1', 'Disable_1')
+        self.delete_old_rules('Enable_2', 'Disable_2')
+        self.router_filter.delete_rule(self.Mui.comboBox.currentText(), 'sched')
         self.uibut2.pushButton_2.setDisabled(True)
         self.uibut2.pushButton_3.setDisabled(True)
         self.uibut2.pushButton_4.setDisabled(True)

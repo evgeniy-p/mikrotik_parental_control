@@ -28,7 +28,6 @@ class Scheduler(same.Same):
         if shed_id:
             self.make('/system/scheduler/remove', '=.id=' + shed_id)
 
-
     def show_shed(self, host, method):
         answer = self.getanswer('/system/scheduler/print', '?name={}_'.format(method) + host)
         logging.debug(answer)
@@ -46,9 +45,7 @@ class Scheduler(same.Same):
         else:
             return False, False
 
-
-    def disable_shed(self, host):
-        pass
-
-    def enable_shed(self, host):
-        pass
+    def modify_shed(self, host, method, disable='yes'):
+        shed_id = self.make('/system/scheduler/print', '?name={}_'.format(method) + host)
+        if shed_id:
+            self.make('/system/scheduler/set', '=.id=' + shed_id, '=disabled='+disable)

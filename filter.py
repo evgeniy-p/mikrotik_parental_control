@@ -53,13 +53,21 @@ class Filter:
                         disabled = buf.getvalue()
                         logging.debug(disabled)
 
-
-    def delete_rule(self, host):
+    def delete_rule(self, host, method):
         self.hosts_dict = dhcp_hosts.DhcpHosts.hosts
         with io.StringIO() as buf, redirect_stdout(buf):
-            self.router.talk(['/ip/firewall/filter/remove', '=.id=' + self.ids[host]])
+            self.router.talk(['/ip/firewall/filter/print', '?comment=' + method + '_'
+                              + self.hosts_dict[host]['address']])
             self.answer = buf.getvalue()
             logging.debug(self.answer)
+        if ">>> !re" in self.answer.split('\n'):
+            for line in self.answer.split('\n'):
+                if match('^.*\.id.*', line):
+                    with io.StringIO() as buf, redirect_stdout(buf):
+                        self.router.talk(['/ip/firewall/filter/remove', '=.id=' + match('^.*\.id=(.*)', line).group(1),])
+                        deleted = buf.getvalue()
+                        logging.debug(deleted)
+
 
 
 
