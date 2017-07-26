@@ -17,8 +17,6 @@ from contextlib import redirect_stdout
 from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5 import QtCore
 
-policy_can = ['ftp', 'reboot', 'read', 'write', 'policy', 'test', 'password', 'sniff', 'sensitive', 'romon']
-
 
 class MainWindow:
     def __init__(self):
