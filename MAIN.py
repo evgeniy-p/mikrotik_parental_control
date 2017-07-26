@@ -403,6 +403,7 @@ class MainWindow:
         self.uibut2.pushButton_3.setDisabled(True)
 
     def pushbuttonbut2_4(self):
+        self.windowshed_but.close()
         self.uibut2.pushButton.setText('wait...')
         self.uibut2.pushButton.setDisabled(True)
         self.Mui.pushButton.setText('wait...')
