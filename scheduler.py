@@ -21,7 +21,7 @@ class Scheduler(same.Same):
     def make_sched(self, host, date, interv, method):
         self.make('/system/scheduler/add', '=name={}_'.format(method) + host,
                   '=start-date=' + make_day(date), '=start-time=' + date.split('*')[2],
-                  '=interval=' + interv, '=on-event=Enable_' + host, '=disabled=yes')
+                  '=interval=' + interv, '=on-event={}_'.format(method) + host, '=disabled=yes')
 
     def remove_shed(self, host, method):
         shed_id = self.make('/system/scheduler/print', '?name={}_'.format(method) + host)
