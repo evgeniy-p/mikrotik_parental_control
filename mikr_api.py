@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-import sys, posix, time, binascii, socket, select
+import sys, time, binascii, socket, select
 import hashlib
 import io
 
