@@ -16,7 +16,7 @@ class Filter:
         self.hosts_dict = dhcp_hosts.DhcpHosts.hosts
         with io.StringIO() as buf, redirect_stdout(buf):
             self.router.talk(['/ip/firewall/filter/add', '=chain=forward', '=action=reject',
-                              '=reject-with=icmp-admin-prohibited', '=out-interface=all-ethernet',
+                              '=reject-with=icmp-admin-prohibited',
                               '=comment=' + method + '_' + self.hosts_dict[host]['address'], '=place-before=0',
                               '=src-address=' + self.hosts_dict[host]['address']])
             answer = buf.getvalue()
